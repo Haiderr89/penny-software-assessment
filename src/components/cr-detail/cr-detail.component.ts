@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormControl, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { CrApiService } from '../../api/cr-api.service';
@@ -27,6 +27,8 @@ function nonBlank(control: AbstractControl<string>): ValidationErrors | null {
 })
 export class CrDetailComponent implements OnInit {
 	@Input() id!: string;
+	/** Fires after a successful action so the host can refresh sibling views (e.g. the list). */
+	@Output() changed = new EventEmitter<CrDetail>();
 
 	state: ViewState<CrDetail> = idle();
 	submitting = false;
@@ -103,6 +105,7 @@ export class CrDetailComponent implements OnInit {
 		try {
 			const updated = await call(this.session.user, this.id);
 			this.state = { status: 'loaded', data: updated };
+			this.changed.emit(updated);
 			return true;
 		} catch (err) {
 			this.actionError = (err as Error).message;

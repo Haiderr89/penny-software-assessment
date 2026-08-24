@@ -180,6 +180,24 @@ describe('CrDetailComponent — diff, timeline, actions', () => {
 		expect(fixture.nativeElement.querySelector('.cr-timeline__note').textContent).toBe('Quantity increase is not budgeted');
 	});
 
+	it('emits `changed` on a successful action but not on a failed one', async () => {
+		const api = await setup(users.approver);
+		const fixture = await create('CR-1');
+		const emitted: string[] = [];
+		fixture.componentInstance.changed.subscribe((cr) => emitted.push(cr.status));
+
+		api.failNext = true;
+		fixture.nativeElement.querySelector('.cr-actions__approve').click();
+		await flush();
+		fixture.detectChanges();
+		expect(emitted).toEqual([]);
+
+		fixture.nativeElement.querySelector('.cr-actions__approve').click();
+		await flush();
+		fixture.detectChanges();
+		expect(emitted).toEqual(['APPROVED']);
+	});
+
 	it('never offers the reject controls to a read-only viewer', async () => {
 		await setup(users.viewer);
 		const fixture = await create('CR-1');
