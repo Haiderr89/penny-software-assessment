@@ -1,9 +1,9 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormControl, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { CrApiService } from '../../api/cr-api.service';
 import { SessionService } from '../../session/session.service';
-import { CrDetail, TimelineEntry } from '../../models/cr.models';
+import { CrDetail, ReqUser, TimelineEntry } from '../../models/cr.models';
 import { idle, loading, ViewState } from '../../common/view-state';
 import { computeDiff, DiffRow } from '../diff.util';
 import { canApprovePolicy } from '../../common/permissions';
@@ -14,6 +14,11 @@ import { formatMoney } from '../../common/money.util';
  * permission-aware Approve/Reject actions. `load`, the diff binding, and the template skeleton are
  * provided; the timeline ordering, permission gating, actions, and reject validation are yours.
  */
+/** Valid only when the value contains non-whitespace text. */
+function nonBlank(control: AbstractControl<string>): ValidationErrors | null {
+	return control.value.trim().length ? null : { required: true };
+}
+
 @Component({
 	selector: 'app-cr-detail',
 	standalone: true,
@@ -26,8 +31,7 @@ export class CrDetailComponent implements OnInit {
 	state: ViewState<CrDetail> = idle();
 	submitting = false;
 	actionError?: string;
-	// TODO: add validation so the form is invalid until a reason is entered.
-	rejectControl = new FormControl('', { nonNullable: true });
+	rejectControl = new FormControl('', { nonNullable: true, validators: [nonBlank] });
 
 	constructor(private readonly api: CrApiService, private readonly session: SessionService) {}
 
@@ -54,10 +58,9 @@ export class CrDetailComponent implements OnInit {
 		return this.detail ? computeDiff(this.detail.baselineLineItems, this.detail.proposedLineItems) : [];
 	}
 
-	/** Approval timeline, oldest-first. */
+	/** Approval timeline, oldest-first. The audit array arrives in no guaranteed order. */
 	get timeline(): TimelineEntry[] {
-		// TODO: return the audit entries ordered chronologically (oldest first).
-		return this.detail?.audit ?? [];
+		return [...(this.detail?.audit ?? [])].sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
 	}
 
 	/** Whether the current user may approve the loaded CR: pending status AND an approve policy. */
@@ -75,13 +78,37 @@ export class CrDetailComponent implements OnInit {
 	}
 
 	async approve(): Promise<void> {
-		// TODO: perform the approve action through the API and reflect the outcome in the view.
-		throw new Error('approve() not implemented');
+		if (!this.canApprove || this.submitting) return;
+		await this.runAction((user, id) => this.api.approve(user, id, new Date().toISOString()));
 	}
 
 	async reject(): Promise<void> {
-		// TODO: require a valid rejectControl, then perform the reject action through the API and
-		//       reflect the outcome in the view.
-		throw new Error('reject() not implemented');
+		if (!this.canReject || this.submitting) return;
+		if (this.rejectControl.invalid) {
+			this.rejectControl.markAsTouched();
+			return;
+		}
+		const reason = this.rejectControl.value.trim();
+		const done = await this.runAction((user, id) => this.api.reject(user, id, new Date().toISOString(), reason));
+		if (done) this.rejectControl.reset();
+	}
+
+	/**
+	 * Shared action wrapper: one in-flight action at a time; on success the fresh CR replaces the
+	 * view state, on failure the loaded CR stays on screen with the error alongside.
+	 */
+	private async runAction(call: (user: ReqUser, id: string) => Promise<CrDetail>): Promise<boolean> {
+		this.submitting = true;
+		this.actionError = undefined;
+		try {
+			const updated = await call(this.session.user, this.id);
+			this.state = { status: 'loaded', data: updated };
+			return true;
+		} catch (err) {
+			this.actionError = (err as Error).message;
+			return false;
+		} finally {
+			this.submitting = false;
+		}
 	}
 }
