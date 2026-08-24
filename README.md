@@ -83,8 +83,3 @@ src/
     cr-list/cr-list.component.spec.ts       # passing example (loaded / empty render)
     cr-detail/cr-detail.component.spec.ts   # one failing case to start from
 ```
-
-## A note on AI tools
-
-Using AI tools is allowed and expected — see the brief for the (light) disclosure policy. The follow-up
-interview is built around your own code, so make sure you understand what you submit.
