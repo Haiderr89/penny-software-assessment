@@ -16,6 +16,11 @@ export interface DiffRow {
  * Heads-up: the change-detection here is not quite right — a line that changed is sometimes reported
  * as unchanged. `diff.spec.ts` surfaces the defect; the root cause lives in this file.
  */
+/** Two line items are the same only when every reviewer-visible field matches. */
+function sameItem(a: LineItem, b: LineItem): boolean {
+	return a.quantity === b.quantity && a.unitPrice === b.unitPrice && a.description === b.description;
+}
+
 export function computeDiff(baseline: LineItem[], proposed: LineItem[]): DiffRow[] {
 	const rows: DiffRow[] = [];
 	const proposedBySku = new Map(proposed.map((p) => [p.sku, p]));
@@ -27,8 +32,7 @@ export function computeDiff(baseline: LineItem[], proposed: LineItem[]): DiffRow
 			rows.push({ sku: b.sku, kind: 'removed', baseline: b });
 			continue;
 		}
-		const changed = b.unitPrice !== p.unitPrice;
-		rows.push({ sku: b.sku, kind: changed ? 'changed' : 'unchanged', baseline: b, proposed: p });
+		rows.push({ sku: b.sku, kind: sameItem(b, p) ? 'unchanged' : 'changed', baseline: b, proposed: p });
 	}
 	for (const p of proposed) {
 		if (!baselineBySku.has(p.sku)) {
