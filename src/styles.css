@@ -56,3 +56,6 @@ button:disabled {
 .cr-diff__row[data-kind='removed'] {
 	background: #fdecea;
 }
+.cr-timeline__entry span {
+	margin-right: 0.5rem;
+}
