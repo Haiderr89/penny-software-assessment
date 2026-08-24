@@ -9,10 +9,42 @@ export const users: Record<string, ReqUser> = {
 };
 
 export const summaries: CrSummary[] = [
-	{ id: 'CR-1', title: 'Add 1 unit of SKU-A', status: 'PENDING_APPROVAL', orgCode: 'org-alpha', delta: 500, currency: 'USD', updatedAt: '2026-03-02T10:00:00.000Z' },
-	{ id: 'CR-2', title: 'Replace SKU-B supplier', status: 'APPLIED', orgCode: 'org-alpha', delta: 0, currency: 'USD', updatedAt: '2026-03-01T09:00:00.000Z' },
-	{ id: 'CR-3', title: 'Extend agreement term', status: 'DRAFT', orgCode: 'org-alpha', delta: 0, currency: 'USD', updatedAt: '2026-03-03T11:00:00.000Z' },
-	{ id: 'CR-9', title: 'Beta org change', status: 'PENDING_APPROVAL', orgCode: 'org-beta', delta: 200, currency: 'USD', updatedAt: '2026-03-02T08:00:00.000Z' },
+	{
+		id: 'CR-1',
+		title: 'Add 1 unit of SKU-A',
+		status: 'PENDING_APPROVAL',
+		orgCode: 'org-alpha',
+		delta: 500,
+		currency: 'USD',
+		updatedAt: '2026-03-02T10:00:00.000Z',
+	},
+	{
+		id: 'CR-2',
+		title: 'Replace SKU-B supplier',
+		status: 'APPLIED',
+		orgCode: 'org-alpha',
+		delta: 0,
+		currency: 'USD',
+		updatedAt: '2026-03-01T09:00:00.000Z',
+	},
+	{
+		id: 'CR-3',
+		title: 'Extend agreement term',
+		status: 'DRAFT',
+		orgCode: 'org-alpha',
+		delta: 0,
+		currency: 'USD',
+		updatedAt: '2026-03-03T11:00:00.000Z',
+	},
+	{
+		id: 'CR-9',
+		title: 'Beta org change',
+		status: 'PENDING_APPROVAL',
+		orgCode: 'org-beta',
+		delta: 200,
+		currency: 'USD',
+		updatedAt: '2026-03-02T08:00:00.000Z',
+	},
 ];
 
 export const details: Record<string, CrDetail> = {
