@@ -6,6 +6,7 @@ import { SessionService } from '../../session/session.service';
 import { CrDetail, TimelineEntry } from '../../models/cr.models';
 import { idle, loading, ViewState } from '../../common/view-state';
 import { computeDiff, DiffRow } from '../diff.util';
+import { canApprovePolicy } from '../../common/permissions';
 import { formatMoney } from '../../common/money.util';
 
 /**
@@ -59,14 +60,14 @@ export class CrDetailComponent implements OnInit {
 		return this.detail?.audit ?? [];
 	}
 
-	/** Whether the current user may approve the loaded CR. */
+	/** Whether the current user may approve the loaded CR: pending status AND an approve policy. */
 	get canApprove(): boolean {
-		// NOTE: this only looks at the CR status. The UI must also respect the user's permissions.
-		return this.detail?.status === 'PENDING_APPROVAL';
+		return this.detail?.status === 'PENDING_APPROVAL' && canApprovePolicy(this.session.user);
 	}
 
+	/** Reject is part of the same approval decision, so it is gated by the same policy. */
 	get canReject(): boolean {
-		return this.detail?.status === 'PENDING_APPROVAL';
+		return this.detail?.status === 'PENDING_APPROVAL' && canApprovePolicy(this.session.user);
 	}
 
 	fmt(amount: number): string {
