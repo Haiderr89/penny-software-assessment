@@ -180,6 +180,32 @@ describe('CrDetailComponent — diff, timeline, actions', () => {
 		expect(fixture.nativeElement.querySelector('.cr-timeline__note').textContent).toBe('Quantity increase is not budgeted');
 	});
 
+	it('reloads when the id input changes, so actions always target the CR on screen', async () => {
+		await setup(users.approver);
+		const fixture = TestBed.createComponent(CrDetailComponent);
+		fixture.componentRef.setInput('id', 'CR-1');
+		fixture.detectChanges();
+		await flush();
+		fixture.detectChanges();
+		expect(fixture.nativeElement.querySelector('.cr-detail__header h2').textContent).toContain('Add 1 unit of SKU-A');
+		expect((fixture.nativeElement.querySelector('.cr-actions__approve') as HTMLButtonElement).disabled).toBe(false);
+
+		fixture.componentRef.setInput('id', 'CR-3'); // a DRAFT
+		fixture.detectChanges();
+		await flush();
+		fixture.detectChanges();
+		expect(fixture.nativeElement.querySelector('.cr-detail__header h2').textContent).toContain('Extend agreement term');
+		expect((fixture.nativeElement.querySelector('.cr-actions__approve') as HTMLButtonElement).disabled).toBe(true);
+		expect(fixture.nativeElement.querySelector('.cr-actions__reject')).toBeNull();
+	});
+
+	it('never enables Approve for a CR that is not pending approval', async () => {
+		await setup(users.approver);
+		const fixture = await create('CR-2'); // APPLIED
+		expect((fixture.nativeElement.querySelector('.cr-actions__approve') as HTMLButtonElement).disabled).toBe(true);
+		expect(fixture.nativeElement.querySelector('.cr-actions__reject')).toBeNull();
+	});
+
 	it('emits `changed` on a successful action but not on a failed one', async () => {
 		const api = await setup(users.approver);
 		const fixture = await create('CR-1');

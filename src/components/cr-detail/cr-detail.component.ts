@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormControl, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { CrApiService } from '../../api/cr-api.service';
@@ -25,7 +25,7 @@ function nonBlank(control: AbstractControl<string>): ValidationErrors | null {
 	imports: [CommonModule, ReactiveFormsModule],
 	templateUrl: './cr-detail.component.html',
 })
-export class CrDetailComponent implements OnInit {
+export class CrDetailComponent implements OnInit, OnChanges {
 	@Input() id!: string;
 	/** Fires after a successful action so the host can refresh sibling views (e.g. the list). */
 	@Output() changed = new EventEmitter<CrDetail>();
@@ -39,6 +39,14 @@ export class CrDetailComponent implements OnInit {
 
 	ngOnInit(): void {
 		void this.load();
+	}
+
+	/** Re-load when the host selects a different CR, so the view (and any action) can never target a stale one. */
+	ngOnChanges(changes: SimpleChanges): void {
+		if (changes['id'] && !changes['id'].firstChange) {
+			this.rejectControl.reset();
+			void this.load();
+		}
 	}
 
 	async load(): Promise<void> {

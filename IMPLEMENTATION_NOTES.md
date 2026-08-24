@@ -25,6 +25,10 @@
 - Added a visible "Submitting…" status while an action is in flight.
 - Detail emits a `changed` event after a successful action; the demo shell uses it to re-load the
   list so both panes agree on the CR's status.
+- Found during manual testing: the detail only loaded in `ngOnInit`, so selecting a different row
+  changed the `id` input while the pane kept showing the previous CR — and Approve could then act
+  on the newly selected CR (even a DRAFT) while displaying the stale pending one. Fixed with an
+  `ngOnChanges` re-load (which also resets the reject reason), pinned by a regression test.
 - One-line CSS fixes: explicit page background (dark-mode browsers rendered black-on-black) and
   spacing between timeline fields.
 
@@ -47,6 +51,7 @@ way: mock API promise → `state` → template.
 | Reject never fires without a reason | `nonBlank` validator + disabled button + guard in `reject()` |
 | A failed action never blanks the view | failure path only sets `actionError`; `state` untouched |
 | Timeline is chronological | `timeline` getter sorts by `Date.parse(at)` on a copy |
+| Actions target the CR on screen | `ngOnChanges` re-loads whenever the `id` input changes |
 | List and detail agree after an action | `changed` output → shell re-loads the list |
 
 ## 4. Testing strategy
